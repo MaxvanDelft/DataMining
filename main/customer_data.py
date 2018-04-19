@@ -99,6 +99,9 @@ def setfeatures():
     d = defaultdict(lambda: len(dfCountries.index)+1, d)
     for index, row in dfCountries.iterrows():
         d[row["country"]] = row["rank"]
+
+    # to set values in a whole column of a dataframe we set it equal to a list of values. The list must have the right length. This method is up to 50 times faster than using loc or ix
+    # https://stackoverflow.com/questions/45795274/fast-way-of-populating-a-very-large-dataframe-with-values
     #print("Time setting the countrycodes directly into the dataframe:")
     #start = time.time()
     #for i in range(0,len(dfCustomer.index)) :
