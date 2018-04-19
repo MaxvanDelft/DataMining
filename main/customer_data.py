@@ -1,6 +1,6 @@
 # Max van Delft, Patrick t Jong
 # April 2018
-# run by 'python customer_dataV2.py'. execution takes about 20 minutes
+# run by 'python customer_dataV2.py'. execution takes about 3 minutes
 
 # Costumer data before 2015:
 # 1. Last transaction date                      V
@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from sklearn import preprocessing
+import time
 
 print ("Started")
 #Global variables
@@ -88,17 +89,31 @@ def setfeatures():
     dfCountries = dfCountries[pd.notnull(dfCountries["country"])]
     dfCountries = dfCountries.reset_index(drop=True)
     dfCountries["rank"] = range(0,len(dfCountries.index))
-    dfCountries = dfCountries.drop('numberOfTransactions', 1)
-    dfCustomer["countryCode"] = len(dfCountries.index)
-    dic = dict((name,None) for name in dfCountries["country"])
-    dic = defaultdict(lambda: len(dfCountries.index)+1, dic)
+    #dfCountries = dfCountries.drop('numberOfTransactions', 1)
+    #dfCustomer['countryCode'] = len(dfCountries.index)
+    d = dict((name,None) for name in dfCountries["country"])
+    d = defaultdict(lambda: len(dfCountries.index)+1, d)
     for index, row in dfCountries.iterrows():
-        dic[row["country"]] = row["rank"]
+        d[row["country"]] = row["rank"]
+    #print("Time setting the countrycodes directly into the dataframe:")
+    #start = time.time()
+    #for i in range(0,len(dfCustomer.index)) :
+    #    dfCustomer.loc[i,'countryCode'] = d[dfCustomer.iloc[i]["country"]]
+    #end = time.time()
+    #print(end - start)
+
+    #print("Time setting country of customers in a list and filling a list with countrycode:")
+    listCountries = dfCustomer["country"]
+    listCountryCode = []
+    start = time.time()
     for i in range(0,len(dfCustomer.index)) :
-        dfCustomer.loc[i,'countryCode'] = dic[dfCustomer.iloc[i]["country"]]
+        listCountryCode.append(d[listCountries[i]])
+    dfCustomer['countryCode'] = listCountryCode
+    end = time.time()
+    #print(end - start)
+
     # Clean up old country column
     del dfCustomer['country']
-
 
     # used for identification of accounts having purchased in the last month, 2nd last month, etc
     dfLastMonth    = df1[df1['saleDateTime'] >= pd.Timestamp('20131201')]
@@ -171,19 +186,29 @@ def setfeatures():
     for index, row in df6thLastMonth.iterrows():
         d6[row["accountName"]] = row["totalSpending"]
 
+
+    listCustomerAccountName = dfCustomer["accountName"]
+
+    listSpendingLastMonth    = [0] * len(dfCustomer)
+    listSpending2ndLastMonth = [0] * len(dfCustomer)
+    listSpending3rdLastMonth = [0] * len(dfCustomer)
+    listSpending4thLastMonth = [0] * len(dfCustomer)
+    listSpending5thLastMonth = [0] * len(dfCustomer)
+    listSpending6thLastMonth = [0] * len(dfCustomer)
     for i in range(0,len(dfCustomer.index)) :
-        if d1[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spendingLastMonth']    = d1[dfCustomer.iloc[i]["accountName"]]
-        if d2[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spending2ndLastMonth'] = d2[dfCustomer.iloc[i]["accountName"]]
-        if d3[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spending3rdLastMonth'] = d3[dfCustomer.iloc[i]["accountName"]]
-        if d4[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spending4thLastMonth'] = d4[dfCustomer.iloc[i]["accountName"]]
-        if d5[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spending5thLastMonth'] = d5[dfCustomer.iloc[i]["accountName"]]
-        if d6[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spending6thLastMonth'] = d6[dfCustomer.iloc[i]["accountName"]]
+        listSpendingLastMonth[i]    = d1[listCustomerAccountName[i]]
+        listSpending2ndLastMonth[i] = d2[listCustomerAccountName[i]]
+        listSpending3rdLastMonth[i] = d3[listCustomerAccountName[i]]
+        listSpending4thLastMonth[i] = d4[listCustomerAccountName[i]]
+        listSpending5thLastMonth[i] = d5[listCustomerAccountName[i]]
+        listSpending6thLastMonth[i] = d6[listCustomerAccountName[i]]
+    dfCustomer['spendingLastMonth'   ] = listSpendingLastMonth
+    dfCustomer['spending2ndLastMonth'] = listSpending2ndLastMonth
+    dfCustomer['spending3rdLastMonth'] = listSpending3rdLastMonth
+    dfCustomer['spending4thLastMonth'] = listSpending4thLastMonth
+    dfCustomer['spending5thLastMonth'] = listSpending5thLastMonth
+    dfCustomer['spending6thLastMonth'] = listSpending6thLastMonth
+
 
     for index, row in dfLastMonth.iterrows():
         d1[row["accountName"]] = row["numberOfTransactions"]
@@ -198,19 +223,26 @@ def setfeatures():
     for index, row in df6thLastMonth.iterrows():
         d6[row["accountName"]] = row["numberOfTransactions"]
 
+    listTransactionsLastMonth    = [0] * len(dfCustomer) # list of number of transaction over the last month per customer
+    listTransactions2ndLastMonth = [0] * len(dfCustomer)
+    listTransactions3rdLastMonth = [0] * len(dfCustomer)
+    listTransactions4thLastMonth = [0] * len(dfCustomer)
+    listTransactions5thLastMonth = [0] * len(dfCustomer)
+    listTransactions6thLastMonth = [0] * len(dfCustomer)
     for i in range(0,len(dfCustomer.index)) :
-        if d1[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactionsLastMonth']    = d1[dfCustomer.iloc[i]["accountName"]]
-        if d2[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactions2ndLastMonth'] = d2[dfCustomer.iloc[i]["accountName"]]
-        if d3[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactions3rdLastMonth'] = d3[dfCustomer.iloc[i]["accountName"]]
-        if d4[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactions4thLastMonth'] = d4[dfCustomer.iloc[i]["accountName"]]
-        if d5[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactions5thLastMonth'] = d5[dfCustomer.iloc[i]["accountName"]]
-        if d6[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactions6thLastMonth'] = d6[dfCustomer.iloc[i]["accountName"]]
+        listTransactionsLastMonth[i]    = d1[listCustomerAccountName[i]]
+        listTransactions2ndLastMonth[i] = d2[listCustomerAccountName[i]]
+        listTransactions3rdLastMonth[i] = d3[listCustomerAccountName[i]]
+        listTransactions4thLastMonth[i] = d4[listCustomerAccountName[i]]
+        listTransactions5thLastMonth[i] = d5[listCustomerAccountName[i]]
+        listTransactions6thLastMonth[i] = d6[listCustomerAccountName[i]]
+    dfCustomer['transactionsLastMonth'   ] = listTransactionsLastMonth
+    dfCustomer['transactions2ndLastMonth'] = listTransactions2ndLastMonth
+    dfCustomer['transactions3rdLastMonth'] = listTransactions3rdLastMonth
+    dfCustomer['transactions4thLastMonth'] = listTransactions4thLastMonth
+    dfCustomer['transactions5thLastMonth'] = listTransactions5thLastMonth
+    dfCustomer['transactions6thLastMonth'] = listTransactions6thLastMonth
+
 
 
     # The dataframes below are used for identification of accounts having purchased in the last week, last 2 weeks, etc
@@ -269,17 +301,23 @@ def setfeatures():
     for index, row in dfLast8Months.iterrows():
         d5[row["accountName"]] = row["totalSpending"]
 
+    listSpendingLastWeek    = [0] * len(dfCustomer)
+    listSpendingLast2Weeks  = [0] * len(dfCustomer)
+    listSpendingLast2Months = [0] * len(dfCustomer)
+    listSpendingLast4Months = [0] * len(dfCustomer)
+    listSpendingLast8Months = [0] * len(dfCustomer)
     for i in range(0,len(dfCustomer.index)) :
-        if d1[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spendingLastWeek']    = d1[dfCustomer.iloc[i]["accountName"]]
-        if d2[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spendingLast2Weeks']  = d2[dfCustomer.iloc[i]["accountName"]]
-        if d3[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spendingLast2Months'] = d3[dfCustomer.iloc[i]["accountName"]]
-        if d4[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spendingLast4Months'] = d4[dfCustomer.iloc[i]["accountName"]]
-        if d5[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'spendingLast8Months'] = d5[dfCustomer.iloc[i]["accountName"]]
+        listSpendingLastWeek[i]    = d1[listCustomerAccountName[i]]
+        listSpendingLast2Weeks[i]  = d2[listCustomerAccountName[i]]
+        listSpendingLast2Months[i] = d3[listCustomerAccountName[i]]
+        listSpendingLast4Months[i] = d4[listCustomerAccountName[i]]
+        listSpendingLast8Months[i] = d5[listCustomerAccountName[i]]
+    dfCustomer['spendingLastWeek'   ] = listSpendingLastWeek
+    dfCustomer['spendingLast2Weeks' ] = listSpendingLast2Weeks
+    dfCustomer['spendingLast2Months'] = listSpendingLast2Months
+    dfCustomer['spendingLast4Months'] = listSpendingLast4Months
+    dfCustomer['spendingLast8Months'] = listSpendingLast8Months
+
 
     for index, row in dfLastWeek.iterrows():
         d1[row["accountName"]] = row["numberOfTransactions"]
@@ -292,22 +330,31 @@ def setfeatures():
     for index, row in dfLast8Months.iterrows():
         d5[row["accountName"]] = row["numberOfTransactions"]
 
+
+    listTransactionsLastWeek    = [0] * len(dfCustomer)
+    listTransactionsLast2Weeks  = [0] * len(dfCustomer)
+    listTransactionsLast2Months = [0] * len(dfCustomer)
+    listTransactionsLast4Months = [0] * len(dfCustomer)
+    listTransactionsLast8Months = [0] * len(dfCustomer)
     for i in range(0,len(dfCustomer.index)) :
-        if d1[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactionsLastWeek']    = d1[dfCustomer.iloc[i]["accountName"]]
-        if d2[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactionsLast2Weeks']  = d2[dfCustomer.iloc[i]["accountName"]]
-        if d3[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactionsLast2Months'] = d3[dfCustomer.iloc[i]["accountName"]]
-        if d4[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactionsLast4Months'] = d4[dfCustomer.iloc[i]["accountName"]]
-        if d5[dfCustomer.iloc[i]["accountName"]] != 0 :
-            dfCustomer.loc[i,'transactionsLast8Months'] = d5[dfCustomer.iloc[i]["accountName"]]
+        listTransactionsLastWeek[i]    = d1[listCustomerAccountName[i]]
+        listTransactionsLast2Weeks[i]  = d2[listCustomerAccountName[i]]
+        listTransactionsLast2Months[i] = d3[listCustomerAccountName[i]]
+        listTransactionsLast4Months[i] = d4[listCustomerAccountName[i]]
+        listTransactionsLast8Months[i] = d5[listCustomerAccountName[i]]
+    dfCustomer['transactionsLastWeek'   ] = listTransactionsLastWeek
+    dfCustomer['transactionsLast2Weeks' ] = listTransactionsLast2Weeks
+    dfCustomer['transactionsLast2Months'] = listTransactionsLast2Months
+    dfCustomer['transactionsLast4Months'] = listTransactionsLast4Months
+    dfCustomer['transactionsLast8Months'] = listTransactionsLast8Months
 
     return;
 
+
+
 def settarget():
     global df1, df2, dfCustomer
+    print ("busy setting target")
     dfCustomer['repurchase'] = False
     dfBefore = pd.DataFrame(); dfBefore["accountName"] = df1["accountName"]
     dfAfter  = pd.DataFrame(); dfAfter ["accountName"] = df2["accountName"]
@@ -315,18 +362,37 @@ def settarget():
     dfIntersect = pd.merge(dfBefore,dfAfter, how = 'inner', on=['accountName','accountName'])
     dfIntersect.drop_duplicates(subset=["accountName"],inplace=True)
     # setting hash table
+
     d = dict((name,1) for name in dfIntersect["accountName"])
     d = defaultdict(lambda: -1, d)
+
+    #start = time.time()
+    #for i in range(0,len(dfCustomer.index)):
+    #    if (d[dfCustomer.iloc[i]["accountName"]] == 1):
+    #        dfCustomer.loc[i,'repurchase'] = True
+    #end = time.time()
+    #print(end - start)
+
+    listCustomerAccountName = dfCustomer["accountName"]
+    listRepurchase = [False]*len(dfCustomer)
+    start = time.time()
     for i in range(0,len(dfCustomer.index)):
-        if (d[dfCustomer.iloc[i]["accountName"]] == 1):
-            dfCustomer.loc[i,'repurchase'] = True
+        if (d[listCustomerAccountName[i]] == 1):
+            listRepurchase[i] = True
+    dfCustomer['repurchase'] = listRepurchase
+    end = time.time()
+    #print(end - start)
+
     return;
 
 
 #Main
 readdata()
 splitdata()
+start = time.time()
 setfeatures()
+end = time.time()
+print("Elapsed time setting the features: ", end - start, "s\n")
 settarget()
 printdata()
 
