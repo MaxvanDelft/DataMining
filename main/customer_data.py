@@ -2,16 +2,20 @@
 # April 2018
 # run by 'python customer_dataV2.py'. execution takes about 3 minutes
 
-# Costumer data before 2015:
-# 1. Last transaction date                      V
-# 2. First transaction date                     V
-# 3. Average time between transactions          V
-# 4. Lifespan                                   V
-# 5. Number of transactions                     V
-# 6. Spending behaviour (total spending price)  V
-# 7. Countrycode                                V
-# 8. Maximal transaction price                  V
-# 9. Average transaction price                  V
+# Costumer data before 2014:
+# 1. Last transaction date                            V
+# 2. First transaction date                           V
+# 3. Average time between transactions                V
+# 4. Lifespan                                         V
+# 5. Number of transactions                           V
+# 6. Spending behaviour (total spending price)        V
+# 7. Maximal transaction price                        V
+# 8. Average transaction price                        V
+# 9. Countrycode                                      V
+# 10-15 spending     last month, 2nd last month, etc  V
+# 16-21 transactions last month, 2nd last month, etc  V
+# 22-26 spending     last week , last 2 weeks  , etc  V
+# 27-31 transactions last week , last 2 weeks  , etc  V
 
 import datetime
 import numpy as np
@@ -66,9 +70,9 @@ def setfeatures():
     dfCustomer['avgTimeBetweenTransactions'] = dfCustomer.apply(lambda row: row.lifeSpan/row.numberOfTransactions, axis=1) #5
     dfCustomer['totalSpending'       ] = df1ByAccountName['priceInEUR'  ].transform('sum') #6
 
-    dfCustomer['maxTransactionPrice' ] = df1ByAccountName['priceInEUR'  ].transform('max') #8
-    dfCustomer['avgTransactionPrice' ] = df1ByAccountName['priceInEUR'  ].transform(np.mean) #9
-    dfCustomer['country'             ] = df1['ipCountry'] #10
+    dfCustomer['maxTransactionPrice' ] = df1ByAccountName['priceInEUR'  ].transform('max') #7
+    dfCustomer['avgTransactionPrice' ] = df1ByAccountName['priceInEUR'  ].transform(np.mean) #8
+    dfCustomer['country'             ] = df1['ipCountry']
     # Convert date to number of days:mins:secs (timedelta obtject) until 1 jan 2014
     dfCustomer['firstTransactionDate'] = pd.Timestamp('20140101') - dfCustomer['firstTransactionDate']
     dfCustomer['lastTransactionDate' ] = pd.Timestamp('20140101') - dfCustomer['lastTransactionDate' ]
@@ -108,7 +112,7 @@ def setfeatures():
     start = time.time()
     for i in range(0,len(dfCustomer.index)) :
         listCountryCode.append(d[listCountries[i]])
-    dfCustomer['countryCode'] = listCountryCode
+    dfCustomer['countryCode'] = listCountryCode #9
     end = time.time()
     #print(end - start)
 
@@ -146,19 +150,19 @@ def setfeatures():
     df5thLastMonth.drop_duplicates(subset=["accountName"],inplace=True)
     df6thLastMonth.drop_duplicates(subset=["accountName"],inplace=True)
 
-    dfCustomer["spendingLastMonth"   ] = 0                                                                                                       #9
-    dfCustomer["spending2ndLastMonth"] = 0                                                                                                       #11
-    dfCustomer["spending3rdLastMonth"] = 0                                                                                                       #13
-    dfCustomer["spending4thLastMonth"] = 0                                                                                                       #15
-    dfCustomer["spending5thLastMonth"] = 0                                                                                                       #17
-    dfCustomer["spending6thLastMonth"] = 0                                                                                                       #19
+    dfCustomer["spendingLastMonth"   ] = 0 #10
+    dfCustomer["spending2ndLastMonth"] = 0 #11
+    dfCustomer["spending3rdLastMonth"] = 0 #12
+    dfCustomer["spending4thLastMonth"] = 0 #13
+    dfCustomer["spending5thLastMonth"] = 0 #14
+    dfCustomer["spending6thLastMonth"] = 0 #15
 
-    dfCustomer["transactionsLastMonth"   ] = 0                                                                                                   #10
-    dfCustomer["transactions2ndLastMonth"] = 0                                                                                                   #12
-    dfCustomer["transactions3rdLastMonth"] = 0                                                                                                   #14
-    dfCustomer["transactions4thLastMonth"] = 0                                                                                                   #16
-    dfCustomer["transactions5thLastMonth"] = 0                                                                                                   #18
-    dfCustomer["transactions6thLastMonth"] = 0                                                                                                   #20
+    dfCustomer["transactionsLastMonth"   ] = 0 #16
+    dfCustomer["transactions2ndLastMonth"] = 0 #17
+    dfCustomer["transactions3rdLastMonth"] = 0 #18
+    dfCustomer["transactions4thLastMonth"] = 0 #19
+    dfCustomer["transactions5thLastMonth"] = 0 #20
+    dfCustomer["transactions6thLastMonth"] = 0 #21
 
     d1 = dict((name,0) for name in dfLastMonth   ["accountName"])
     d2 = dict((name,0) for name in df2ndLastMonth["accountName"])
@@ -267,17 +271,17 @@ def setfeatures():
     dfLast4Months.drop_duplicates(subset=["accountName"],inplace=True)
     dfLast8Months.drop_duplicates(subset=["accountName"],inplace=True)
 
-    dfCustomer["spendingLastWeek"   ] = 0                                                                                                         #21
-    dfCustomer["spendingLast2Weeks" ] = 0                                                                                                         #23
-    dfCustomer["spendingLast2Months"] = 0                                                                                                         #25
-    dfCustomer["spendingLast4Months"] = 0                                                                                                         #27
-    dfCustomer["spendingLast8Months"] = 0                                                                                                         #29
+    dfCustomer["spendingLastWeek"   ] = 0 #22
+    dfCustomer["spendingLast2Weeks" ] = 0 #23
+    dfCustomer["spendingLast2Months"] = 0 #24
+    dfCustomer["spendingLast4Months"] = 0 #25
+    dfCustomer["spendingLast8Months"] = 0 #26
 
-    dfCustomer["transactionsLastWeek"   ] = 0                                                                                                     #22
-    dfCustomer["transactionsLast2Weeks" ] = 0                                                                                                     #24
-    dfCustomer["transactionsLast2Months"] = 0                                                                                                     #26
-    dfCustomer["transactionsLast4Months"] = 0                                                                                                     #28
-    dfCustomer["transactionsLast8Months"] = 0                                                                                                     #30
+    dfCustomer["transactionsLastWeek"   ] = 0 #27
+    dfCustomer["transactionsLast2Weeks" ] = 0 #28
+    dfCustomer["transactionsLast2Months"] = 0 #29
+    dfCustomer["transactionsLast4Months"] = 0 #30
+    dfCustomer["transactionsLast8Months"] = 0 #31
 
     d1 = dict((name,0) for name in dfLastWeek   ["accountName"])
     d2 = dict((name,0) for name in dfLast2Weeks ["accountName"])
